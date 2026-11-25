@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClearSpend – Smart Expense Tracker</title>
+  <meta name="description" content="ClearSpend is a personal expense tracker with budgets, savings goals and interactive charts. Your data stays in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+      <span class="brand-text">ClearSpend<small>Smart expense tracker</small></span>
+    </div>
+
+    <nav class="nav-list">
+      <a class="nav-item" href="#dashboard" data-view="dashboard"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+      <a class="nav-item" href="#add" data-view="add"><i class="bi bi-plus-circle"></i><span>Add Expense</span></a>
+      <a class="nav-item" href="#transactions" data-view="transactions"><i class="bi bi-receipt"></i><span>Transactions</span></a>
+      <a class="nav-item" href="#budgets" data-view="budgets"><i class="bi bi-wallet2"></i><span>Budgets</span></a>
+      <a class="nav-item" href="#analytics" data-view="analytics"><i class="bi bi-bar-chart-line"></i><span>Analytics</span></a>
+      <a class="nav-item" href="#goals" data-view="goals"><i class="bi bi-piggy-bank"></i><span>Savings Goals</span></a>
+      <a class="nav-item" href="#settings" data-view="settings"><i class="bi bi-gear"></i><span>Settings</span></a>
+    </nav>
+
+    <a class="side-budget" href="#budgets" id="sideBudget" aria-label="Budget summary"></a>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <div class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="icon-btn d-lg-none" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar"><i class="bi bi-list"></i></button>
+
+      <div class="page-heading">
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="todayText"></p>
+      </div>
+
+      <label class="topbar-search" for="globalSearch">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" id="globalSearch" placeholder="Search expenses by title" autocomplete="off">
+      </label>
+
+      <div class="month-nav" role="group" aria-label="Selected month">
+        <button type="button" class="icon-btn sm" id="monthPrev" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+        <button type="button" class="month-label" id="monthLabel" title="Jump to the current month"></button>
+        <button type="button" class="icon-btn sm" id="monthNext" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+      </div>
+
+      <div class="dropdown">
+        <button class="icon-btn" id="bellBtn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+          <i class="bi bi-bell"></i><span class="bell-badge" id="bellBadge" hidden>0</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end notif-menu" id="notifMenu" aria-labelledby="bellBtn"></ul>
+      </div>
+
+      <a class="profile-btn" href="#settings" aria-label="Profile and settings">
+        <span class="avatar" id="avatar">AM</span>
+        <span class="profile-name" id="profileName">Alex Morgan</span>
+      </a>
+
+      <button class="btn btn-primary btn-quick" id="quickAdd" type="button"><i class="bi bi-plus-lg"></i><span>Add expense</span></button>
+    </header>
+
+    <main class="content" id="content" tabindex="-1">
+
+      <!-- Dashboard -->
+      <section class="view" id="view-dashboard" hidden>
+        <div id="sampleBanner"></div>
+        <div id="summaryCards"></div>
+
+        <div class="row g-3">
+          <div class="col-xl-7">
+            <div class="panel h-100">
+              <div class="panel-head">
+                <div>
+                  <h2>Spending by category</h2>
+                  <p id="chartMonth"></p>
+                </div>
+                <div class="btn-group btn-group-sm seg" role="group" aria-label="Chart type">
+                  <button type="button" class="btn" data-action="chart-type" data-type="doughnut">Doughnut</button>
+                  <button type="button" class="btn" data-action="chart-type" data-type="pie">Pie</button>
+                </div>
+              </div>
+              <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                  <div class="chart-box" id="chartWrap"><canvas id="catChart" aria-label="Spending by category chart" role="img"></canvas></div>
+                </div>
+                <div class="col-md-6">
+                  <ul class="legend-list" id="chartLegend"></ul>
+                </div>
+              </div>
+              <div class="empty-state compact" id="chartEmpty" hidden>
+                <span class="empty-icon"><i class="bi bi-pie-chart"></i></span>
+                <h3>No spending this month</h3>
+                <p>Add an expense and the category breakdown appears here.</p>
+                <button class="btn btn-primary btn-sm" type="button" data-action="quick-add">Add expense</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head">
+                <div><h2>Recent transactions</h2><p>Latest in the selected month</p></div>
+                <a class="btn btn-sm btn-light" href="#transactions">View all</a>
+              </div>
+              <ul class="tx-list" id="recentList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add expense -->
+      <section class="view" id="view-add" hidden>
+        <div class="row g-3">
+          <div class="col-xl-7">
+            <div class="panel">
+              <div class="panel-head">
+                <div><h2>New expense</h2><p>Record what you spent. Totals and charts update straight away.</p></div>
+              </div>
+              <div id="pageFormHost"></div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Recently added</h2><p>Your latest entries</p></div></div>
+              <ul class="tx-list" id="addRecent"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions -->
+      <section class="view" id="view-transactions" hidden>
+        <div class="panel">
+          <div class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-6">
+              <label class="form-label" for="txSearch">Search</label>
+              <input type="search" class="form-control" id="txSearch" placeholder="Search by title" autocomplete="off">
+            </div>
+            <div class="col-lg-2 col-md-6">
+              <label class="form-label" for="txCategory">Category</label>
+              <select class="form-select" id="txCategory"><option value="">All categories</option></select>
+            </div>
+            <div class="col-lg-2 col-6">
+              <label class="form-label" for="txFrom">From</label>
+              <input type="date" class="form-control" id="txFrom">
+            </div>
+            <div class="col-lg-2 col-6">
+              <label class="form-label" for="txTo">To</label>
+              <input type="date" class="form-control" id="txTo">
+            </div>
+            <div class="col-lg-2 col-md-8">
+              <label class="form-label" for="txSort">Sort by</label>
+              <select class="form-select" id="txSort">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="high">Amount, high to low</option>
+                <option value="low">Amount, low to high</option>
+              </select>
+            </div>
+            <div class="col-lg-1 col-md-4">
+              <button type="button" class="btn btn-light w-100" id="txClear" title="Clear filters" aria-label="Clear filters"><i class="bi bi-x-lg"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel p-0 overflow-hidden">
+          <div class="tx-meta" id="txMeta"></div>
+          <div class="table-responsive">
+            <table class="table tx-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Expense title</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Date</th>
+                  <th scope="col" class="text-end">Amount</th>
+                  <th scope="col" class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="txBody"></tbody>
+            </table>
+          </div>
+          <div id="txEmpty"></div>
+          <nav class="tx-pager" id="txPager" aria-label="Transactions pages"></nav>
+        </div>
+      </section>
+
+      <!-- Budgets -->
+      <section class="view" id="view-budgets" hidden>
+        <div class="row g-3">
+          <div class="col-xl-5">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Monthly budget</h2><p>One budget that applies to every month.</p></div></div>
+              <form id="budgetForm" novalidate>
+                <label class="form-label" for="budgetInput">Budget amount (<span class="cur-sym"></span>)</label>
+                <input type="number" class="form-control form-control-lg" id="budgetInput" min="1" step="0.01" inputmode="decimal" placeholder="e.g. 50000">
+                <div class="invalid-feedback"></div>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                  <button type="submit" class="btn btn-primary">Save budget</button>
+                  <button type="button" class="btn btn-light" id="budgetRemove">Remove budget</button>
+                </div>
+              </form>
+              <hr class="my-4">
+              <h3 class="mini-title">What the colours mean</h3>
+              <ul class="tier-guide">
+                <li><span class="dot tier-normal"></span><strong>Under 75%</strong><span>On track</span></li>
+                <li><span class="dot tier-warn"></span><strong>75% to 89%</strong><span>Getting close</span></li>
+                <li><span class="dot tier-critical"></span><strong>90% to 99%</strong><span>Near the limit</span></li>
+                <li><span class="dot tier-over"></span><strong>100% or more</strong><span>Over budget</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-xl-7">
+            <div class="panel h-100" id="budgetStatus"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Last six months</h2><p>How much of your budget each month used</p></div></div>
+          <div class="table-responsive">
+            <table class="table tx-table align-middle mb-0" id="budgetHistory"></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics -->
+      <section class="view" id="view-analytics" hidden>
+        <div class="row g-3" id="insightTiles"></div>
+        <div class="row g-3">
+          <div class="col-xl-6">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Six-month trend</h2><p>Total spending per month</p></div></div>
+              <div class="chart-box tall"><canvas id="trendChart" aria-label="Monthly spending trend" role="img"></canvas></div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Daily spending</h2><p id="dailyMonth"></p></div></div>
+              <div class="chart-box tall"><canvas id="dailyChart" aria-label="Daily spending" role="img"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-xl-7">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Category breakdown</h2><p id="catMonth"></p></div></div>
+              <div id="catAnalysis"></div>
+            </div>
+          </div>
+          <div class="col-xl-5">
+            <div class="panel h-100" id="catDetail"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Savings goals -->
+      <section class="view" id="view-goals" hidden>
+        <div class="panel" id="goalsOverview"></div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h2 class="section-title">Your goals</h2>
+          <button class="btn btn-primary" type="button" data-action="new-goal"><i class="bi bi-plus-lg me-1"></i>New goal</button>
+        </div>
+        <div class="row g-3" id="goalsGrid"></div>
+      </section>
+
+      <!-- Settings -->
+      <section class="view" id="view-settings" hidden>
+        <div class="row g-3">
+          <div class="col-xl-6">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Profile and currency</h2><p>Personalise how ClearSpend looks for you.</p></div></div>
+              <form id="settingsForm" novalidate>
+                <div class="mb-3">
+                  <label class="form-label" for="setName">Your name</label>
+                  <input type="text" class="form-control" id="setName" maxlength="40" autocomplete="name">
+                  <div class="invalid-feedback"></div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="setCurrency">Currency</label>
+                  <select class="form-select" id="setCurrency">
+                    <option value="INR">Indian rupee (₹)</option>
+                    <option value="USD">US dollar ($)</option>
+                    <option value="EUR">Euro (€)</option>
+                    <option value="GBP">British pound (£)</option>
+                  </select>
+                  <div class="form-text">Changing currency only changes the symbol. Amounts are not converted.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save settings</button>
+              </form>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="panel h-100">
+              <div class="panel-head"><div><h2>Your data</h2><p>Everything is stored in this browser only. Nothing is sent anywhere.</p></div></div>
+              <div class="data-actions">
+                <button type="button" class="btn btn-light" id="exportBtn"><i class="bi bi-download me-2"></i>Export backup</button>
+                <button type="button" class="btn btn-light" id="importBtn"><i class="bi bi-upload me-2"></i>Import backup</button>
+                <input type="file" id="importFile" accept="application/json,.json" hidden>
+                <button type="button" class="btn btn-light" id="sampleBtn"><i class="bi bi-magic me-2"></i>Load sample data</button>
+                <button type="button" class="btn btn-outline-danger" id="clearBtn"><i class="bi bi-trash3 me-2"></i>Clear all data</button>
+              </div>
+              <p class="small text-secondary mt-3 mb-0">Tip: export a backup before clearing your browser data or switching devices.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Expense modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="expenseModalTitle">Add expense</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalFormHost"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Goal modal -->
+<div class="modal fade" id="goalModal" tabindex="-1" aria-labelledby="goalModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="goalModalTitle">New savings goal</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="goalForm" novalidate>
+        <div class="modal-body">
+          <input type="hidden" id="goalId">
+          <div class="mb-3">
+            <label class="form-label" for="goalName">Goal name</label>
+            <input type="text" class="form-control" id="goalName" maxlength="60" placeholder="e.g. Emergency fund" autocomplete="off">
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="goalTarget">Target (<span class="cur-sym"></span>)</label>
+              <input type="number" class="form-control" id="goalTarget" min="1" step="0.01" inputmode="decimal">
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="goalSaved">Saved so far (<span class="cur-sym"></span>)</label>
+              <input type="number" class="form-control" id="goalSaved" min="0" step="0.01" inputmode="decimal" value="0">
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="form-label" for="goalDeadline">Target date (optional)</label>
+            <input type="date" class="form-control" id="goalDeadline" min="2000-01-01" max="2100-12-31">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="goalSubmit">Create goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Contribute modal -->
+<div class="modal fade" id="contributeModal" tabindex="-1" aria-labelledby="contributeTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm-wide">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="contributeTitle">Add savings</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="contributeForm" novalidate>
+        <div class="modal-body">
+          <input type="hidden" id="contributeId">
+          <label class="form-label" for="contributeAmount">Amount (<span class="cur-sym"></span>)</label>
+          <input type="number" class="form-control form-control-lg" id="contributeAmount" min="0.01" step="0.01" inputmode="decimal">
+          <div class="invalid-feedback"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add savings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm-wide">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="confirmTitle">Are you sure?</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"><p class="mb-0" id="confirmMessage"></p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
